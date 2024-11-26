@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Membership Comparison Report</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.5;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header img {
+            max-width: 200px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        h2 {
+            color: #666;
+            margin: 30px 0 15px;
+            font-size: 18px;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            page-break-inside: auto;
+        }
+        tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            font-size: 12px;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .section {
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+        }
+        .status-active { color: #2e7d32; }
+        .status-free { color: #1565c0; }
+        .status-linked { color: #6a1b9a; }
+        .status-lead { color: #ff6f00; }
+        .status-cancelled { color: #c62828; }
+        .meta-info {
+            margin: 20px 0;
+            font-size: 14px;
+            color: #666;
+        }
+        .count-badge {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="{{ era_logo_path }}" alt="ERA Logo">
+        <h1>Membership Comparison Report</h1>
+        <div class="meta-info">
+            Comparing {{ current_month }} {{ current_year }} with {{ previous_month }} {{ previous_year }}<br>
+            Generated on: {{ generated_date }}
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>New Active Members <span class="count-badge">{{ changes.new_active|length }}</span></h2>
+        {% if not changes.new_active %}
+            <p>No new active members found.</p>
+        {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Surname</th>
+                        <th>Cell</th>
+                        <th>Email</th>
+                        <th>Join Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in changes.new_active %}
+                    <tr>
+                        <td>{{ member.name }}</td>
+                        <td>{{ member.surname }}</td>
+                        <td>{{ member.cell }}</td>
+                        <td>{{ member.email }}</td>
+                        <td class="status-active">{{ member.mandate_signed }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <h2>New Free Members <span class="count-badge">{{ changes.new_free|length }}</span></h2>
+        {% if not changes.new_free %}
+            <p>No new free members found.</p>
+        {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Surname</th>
+                        <th>Cell</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in changes.new_free %}
+                    <tr>
+                        <td>{{ member.name }}</td>
+                        <td>{{ member.surname }}</td>
+                        <td>{{ member.cell }}</td>
+                        <td>{{ member.email }}</td>
+                        <td class="status-free">FREE</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <h2>New Linked Members <span class="count-badge">{{ changes.new_linked|length }}</span></h2>
+        {% if not changes.new_linked %}
+            <p>No new linked members found.</p>
+        {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Surname</th>
+                        <th>Cell</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in changes.new_linked %}
+                    <tr>
+                        <td>{{ member.name }}</td>
+                        <td>{{ member.surname }}</td>
+                        <td>{{ member.cell }}</td>
+                        <td>{{ member.email }}</td>
+                        <td class="status-linked">LINKED</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <h2>New Leads <span class="count-badge">{{ changes.new_leads|length }}</span></h2>
+        {% if not changes.new_leads %}
+            <p>No new leads found.</p>
+        {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Surname</th>
+                        <th>Cell</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in changes.new_leads %}
+                    <tr>
+                        <td>{{ member.name }}</td>
+                        <td>{{ member.surname }}</td>
+                        <td>{{ member.cell }}</td>
+                        <td>{{ member.email }}</td>
+                        <td class="status-lead">LEAD</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <h2>Cancelled Members <span class="count-badge">{{ changes.cancelled_members|length }}</span></h2>
+        {% if not changes.cancelled_members %}
+            <p>No cancelled members found.</p>
+        {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Surname</th>
+                        <th>Cell</th>
+                        <th>Previous Status</th>
+                        <th>New Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in changes.cancelled_members %}
+                    <tr>
+                        <td>{{ member.name }}</td>
+                        <td>{{ member.surname }}</td>
+                        <td>{{ member.cell }}</td>
+                        <td>{{ member.old_status }}</td>
+                        <td class="status-cancelled">CANCELLED</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <h2>Other Status Changes <span class="count-badge">{{ changes.status_changes|length }}</span></h2>
+        {% if not changes.status_changes %}
+            <p>No other status changes found.</p>
+        {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Surname</th>
+                        <th>Cell</th>
+                        <th>Previous Status</th>
+                        <th>New Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for change in changes.status_changes %}
+                    <tr>
+                        <td>{{ change.name }}</td>
+                        <td>{{ change.surname }}</td>
+                        <td>{{ change.cell }}</td>
+                        <td>{{ change.old_status }}</td>
+                        <td>{{ change.new_status }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,192 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload Membership CSV</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        input[type="file"],
+        input[type="month"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        input[type="month"] {
+            background-color: white;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .messages {
+            margin-bottom: 20px;
+        }
+        .message {
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border-left: 4px solid;
+        }
+        .message.error {
+            background-color: #ffebee;
+            color: #c62828;
+            border-left-color: #c62828;
+        }
+        .message.info {
+            background-color: #e3f2fd;
+            color: #1565c0;
+            border-left-color: #1565c0;
+        }
+        .upload-container {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header img {
+            max-width: 200px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .file-input-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .file-input-wrapper::after {
+            content: 'Choose File';
+            position: absolute;
+            right: 0;
+            top: 0;
+            padding: 8px 16px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 0 4px 4px 0;
+            pointer-events: none;
+        }
+        .nav-links {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .nav-link {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 0 10px;
+            transition: background-color 0.3s;
+        }
+        .nav-link:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="{% static 'images/ERA Logo.png' %}" alt="ERA Logo">
+        <h1>Upload Membership CSV</h1>
+    </div>
+
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="message {{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="upload-container">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="file">Select CSV File:</label>
+                <div class="file-input-wrapper">
+                    <input type="file" id="file" name="file" accept=".csv" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="date">Select Month and Year:</label>
+                <input type="month" id="date" name="date" required>
+            </div>
+            
+            <button type="submit">Upload and Compare</button>
+        </form>
+    </div>
+
+    <div class="nav-links">
+        <a href="{% url 'history' %}" class="nav-link">View Report History</a>
+        <a href="{% url 'current_members' %}" class="nav-link">View Current Members</a>
+        <a href="{% url 'admin:index' %}" class="nav-link">Admin Panel</a>
+    </div>
+
+    <script>
+        // Set default date to current month
+        document.getElementById('date').valueAsDate = new Date();
+
+        // Add event listener to form submission
+        document.querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get the month input value
+            const dateInput = document.getElementById('date').value;
+            const date = new Date(dateInput);
+            
+            // Create hidden inputs for month and year
+            const monthInput = document.createElement('input');
+            monthInput.type = 'hidden';
+            monthInput.name = 'month';
+            monthInput.value = date.toLocaleString('default', { month: 'long' });
+            
+            const yearInput = document.createElement('input');
+            yearInput.type = 'hidden';
+            yearInput.name = 'year';
+            yearInput.value = date.getFullYear();
+            
+            // Add hidden inputs to form
+            this.appendChild(monthInput);
+            this.appendChild(yearInput);
+            
+            // Submit the form
+            this.submit();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+Membership Comparison Web App - Development Roadmap
+Overview
+This Django web app will handle the uploading of monthly CSV files containing member lists for a residents association. It will store data in a PostgreSQL (or SQLite for local development) database and allow comparison between any two selected months. The app will support ongoing uploads for future months, track historical data, and generate a detailed comparison report that can be viewed in the browser or downloaded as a markdown file.
+
+Features
+Upload monthly member lists (starting with October and November, with ongoing support for future months).
+Store each upload in a database with timestamped records.
+Compare member data between any two selected months.
+Generate a detailed membership report, including new members, removed members, and status changes.
+Display the report in the browser and provide a markdown file download.
+User-friendly interface with historical data visualization (e.g., charts for membership trends).
+Prerequisites
+Python 3.10 or higher
+Django 4.x
+PostgreSQL (recommended for production) or SQLite for local testing
+Pandas for data processing
+Django Admin for easy data management
+Setup
+1. Project Initialization
+bash
+Copy code
+django-admin startproject membership_comparison
+cd membership_comparison
+python manage.py startapp reports
+2. Install Required Packages
+bash
+Copy code
+pip install django pandas psycopg2-binary
+3. Database Configuration
+In settings.py, configure your database connection:
+
+python
+Copy code
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+For PostgreSQL (recommended):
+
+python
+Copy code
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'membership_db',
+        'USER': 'your_username',
+        'PASSWORD': 'your_password',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
+4. Models
+Define the models in reports/models.py to store member data and keep track of each monthly upload.
+
+python
+Copy code
+from django.db import models
+
+class MemberUpload(models.Model):
+    upload_date = models.DateField(auto_now_add=True)
+    month = models.CharField(max_length=20)
+    year = models.IntegerField()
+
+    def __str__(self):
+        return f"{self.month} {self.year}"
+
+class Member(models.Model):
+    upload = models.ForeignKey(MemberUpload, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    surname = models.CharField(max_length=100)
+    cell = models.CharField(max_length=20, unique=False)
+    email = models.EmailField(null=True, blank=True)
+    status = models.CharField(max_length=20)
+
+    def __str__(self):
+        return f"{self.name} {self.surname} ({self.status})"
+5. Forms
+In reports/forms.py, create a form for file uploads:
+
+python
+Copy code
+from django import forms
+
+class UploadFileForm(forms.Form):
+    csv_file = forms.FileField()
+    month = forms.CharField(max_length=20)
+    year = forms.IntegerField()
+6. Views
+In reports/views.py, implement the following views:
+
+Upload View
+python
+Copy code
+import pandas as pd
+from django.shortcuts import render, redirect
+from .models import Member, MemberUpload
+from .forms import UploadFileForm
+
+def upload_file(request):
+    if request.method == 'POST':
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            month = form.cleaned_data['month']
+            year = form.cleaned_data['year']
+            csv_file = request.FILES['csv_file']
+            upload_instance = MemberUpload.objects.create(month=month, year=year)
+            process_csv(csv_file, upload_instance)
+            return redirect('generate_report')
+    else:
+        form = UploadFileForm()
+    return render(request, 'upload.html', {'form': form})
+
+def process_csv(file, upload_instance):
+    df = pd.read_csv(file)
+    for _, row in df.iterrows():
+        status = classify_status(row['Date Mandate Signed'])
+        Member.objects.update_or_create(
+            upload=upload_instance,
+            cell=row['Cell'],
+            defaults={
+                'name': row['Name'],
+                'surname': row['Surname'],
+                'email': row['Email'],
+                'status': status,
+            },
+        )
+
+def classify_status(value):
+    if pd.to_datetime(value, errors='coerce') is not pd.NaT:
+        return "Active"
+    elif value == "CNCLD":
+        return "Cancelled"
+    elif value == "FREE":
+        return "Free Member"
+    elif value == "LINKED":
+        return "Linked Member"
+    elif value == "0000-00-00 00:00:00":
+        return "Lead"
+    return "Unknown"
+7. Report Generation
+python
+Copy code
+from django.db.models import Count
+from django.shortcuts import render
+from .models import Member, MemberUpload
+
+def generate_report(request):
+    current_upload = MemberUpload.objects.latest('upload_date')
+    previous_upload = MemberUpload.objects.filter(upload_date__lt=current_upload.upload_date).latest('upload_date')
+
+    current_members = Member.objects.filter(upload=current_upload)
+    previous_members = Member.objects.filter(upload=previous_upload)
+
+    new_members = current_members.exclude(cell__in=previous_members.values_list('cell', flat=True))
+    removed_members = previous_members.exclude(cell__in=current_members.values_list('cell', flat=True))
+    status_changes = [
+        {
+            'name': m.name,
+            'surname': m.surname,
+            'cell': m.cell,
+            'previous_status': previous_members.get(cell=m.cell).status,
+            'current_status': m.status
+        }
+        for m in current_members if m.cell in previous_members.values_list('cell', flat=True)
+        and m.status != previous_members.get(cell=m.cell).status
+    ]
+
+    report_data = {
+        'new_members': new_members,
+        'removed_members': removed_members,
+        'status_changes': status_changes,
+    }
+    return render(request, 'report.html', report_data)
+8. Templates
+upload.html
+
+html
+Copy code
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <p>{{ form.as_p }}</p>
+  <button type="submit">Upload</button>
+</form>
+report.html
+
+html
+Copy code
+<h2>Membership Report</h2>
+<h3>New Members</h3>
+<ul>
+  {% for member in new_members %}
+    <li>{{ member.name }} {{ member.surname }} (Cell: {{ member.cell }})</li>
+  {% endfor %}
+</ul>
+
+<h3>Removed Members</h3>
+<ul>
+  {% for member in removed_members %}
+    <li>{{ member.name }} {{ member.surname }} (Cell: {{ member.cell }})</li>
+  {% endfor %}
+</ul>
+
+<h3>Status Changes</h3>
+<ul>
+  {% for change in status_changes %}
+    <li>{{ change.name }} {{ change.surname }} (Cell: {{ change.cell }}): {{ change.previous_status }} ➔ {{ change.current_status }}</li>
+  {% endfor %}
+</ul>
+9. URL Configuration
+In urls.py:
+
+python
+Copy code
+from django.urls import path
+from .views import upload_file, generate_report
+
+urlpatterns = [
+    path('upload/', upload_file, name='upload_file'),
+    path('report/', generate_report, name='generate_report'),
+]
+10. Running the Application
+bash
+Copy code
+python manage.py makemigrations
+python manage.py migrate
+python manage.py runserver
+Access the app at http://localhost:8000/upload/.
+
+Future Enhancements
+Authentication for secure access.
+Visualization of historical membership trends using charts.
+Export report as PDF.
+Integration with cloud storage for CSV backups.
+This roadmap provides a complete guide for developing the app with ongoing support for monthly uploads and comprehensive comparison reports. Let me know if any additional details are needed!
