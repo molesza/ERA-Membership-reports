@@ -8,6 +8,8 @@ from django.views.generic import TemplateView, ListView, DetailView
 from django.contrib import messages
 from django.conf import settings
 from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -26,6 +28,7 @@ def format_phone_number(number):
         return f'+{number}'
     return number
 
+@login_required
 def download_contact(request, cell):
     """Generate and serve a vCard file for the member"""
     latest_upload = MembershipUpload.objects.order_by('-upload_date').first()
@@ -254,7 +257,7 @@ def compare_memberships(current_df, previous_df):
         print(f"Error in compare_memberships: {str(e)}")
         raise
 
-class UploadView(TemplateView):
+class UploadView(LoginRequiredMixin, TemplateView):
     template_name = 'reports/upload.html'
     
     def post(self, request, *args, **kwargs):
@@ -325,13 +328,13 @@ class UploadView(TemplateView):
             messages.error(request, f'Error processing file: {str(e)}')
             return redirect('upload')
 
-class ReportHistoryView(ListView):
+class ReportHistoryView(LoginRequiredMixin, ListView):
     model = ComparisonReport
     template_name = 'reports/history.html'
     context_object_name = 'reports'
     ordering = ['-generated_date']
 
-class ReportDetailView(DetailView):
+class ReportDetailView(LoginRequiredMixin, DetailView):
     model = ComparisonReport
     template_name = 'reports/comparison.html'
     context_object_name = 'report'
@@ -356,7 +359,7 @@ class ReportDetailView(DetailView):
         })
         return context
 
-class CurrentMembersView(TemplateView):
+class CurrentMembersView(LoginRequiredMixin, TemplateView):
     template_name = 'reports/current_members.html'
 
     def get_context_data(self, **kwargs):
@@ -404,6 +407,7 @@ class CurrentMembersView(TemplateView):
         
         return context
 
+@login_required
 def export_report_pdf(request, pk):
     report = get_object_or_404(ComparisonReport, pk=pk)
     

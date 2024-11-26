@@ -1,0 +1,200 @@
+Django Application Deployment Guide for Proxmox LXC Container
+
+1. CREATE LXC CONTAINER
+-----------------------
+1. In Proxmox web interface:
+   - Create CT -> Choose Ubuntu 22.04 template
+   - Set appropriate resources (2GB RAM, 20GB storage minimum recommended)
+   - Set network configuration (DHCP or static IP)
+   - Start the container after creation
+
+2. INITIAL SETUP
+---------------
+Connect to your container via SSH or console and run:
+```bash
+apt update && apt upgrade -y
+apt install python3-pip python3-venv nginx git -y
+```
+
+3. APPLICATION SETUP
+-------------------
+1. Clone the repository:
+```bash
+cd /opt
+# For public repositories, simply use:
+git clone https://github.com/molesza/membership_comparison.git
+cd membership_comparison
+```
+
+2. Create virtual environment:
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+3. Install requirements:
+```bash
+pip install -r requirements.prod.txt
+```
+
+4. PRODUCTION SETTINGS
+---------------------
+Update membership_comparison/settings.py:
+```python
+DEBUG = False
+ALLOWED_HOSTS = ['your-domain-or-ip']
+STATIC_ROOT = '/opt/membership_comparison/staticfiles'
+
+# Use PostgreSQL instead of SQLite (recommended for production)
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'membership_db',
+        'USER': 'membership_user',
+        'PASSWORD': 'your-secure-password',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
+
+# Set a secure secret key
+SECRET_KEY = 'your-secure-secret-key'
+```
+
+5. GUNICORN SETUP
+----------------
+Create /etc/systemd/system/membership.service:
+```ini
+[Unit]
+Description=Membership Comparison Gunicorn Daemon
+After=network.target
+
+[Service]
+User=root
+Group=www-data
+WorkingDirectory=/opt/membership_comparison
+ExecStart=/opt/membership_comparison/venv/bin/gunicorn \
+    --workers 3 \
+    --bind unix:/opt/membership_comparison/membership.sock \
+    membership_comparison.wsgi:application
+
+[Install]
+WantedBy=multi-user.target
+```
+
+6. NGINX CONFIGURATION
+---------------------
+Create /etc/nginx/sites-available/membership:
+```nginx
+server {
+    listen 80;
+    server_name your-domain-or-ip;
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    
+    location /static/ {
+        root /opt/membership_comparison;
+    }
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/opt/membership_comparison/membership.sock;
+    }
+}
+```
+
+7. FINAL SETUP
+-------------
+```bash
+# Collect static files
+python manage.py collectstatic
+
+# Apply migrations
+python manage.py migrate
+
+# Create superuser
+python manage.py createsuperuser
+
+# Set up Nginx symlink
+ln -s /etc/nginx/sites-available/membership /etc/nginx/sites-enabled/
+
+# Start services
+systemctl start membership
+systemctl enable membership
+systemctl restart nginx
+
+# Check status
+systemctl status membership
+systemctl status nginx
+```
+
+8. SECURITY CONSIDERATIONS
+-------------------------
+1. Set up SSL/TLS using Let's Encrypt
+2. Configure firewall (UFW)
+3. Regular system updates
+4. Backup strategy
+5. Monitor logs
+6. Store sensitive data in environment variables
+
+9. MAINTENANCE AND UPDATES
+-------------------------
+- Logs location: /var/log/nginx/
+- Application directory: /opt/membership_comparison
+- Virtual environment: /opt/membership_comparison/venv
+- Static files: /opt/membership_comparison/staticfiles
+
+Update application:
+```bash
+cd /opt/membership_comparison
+source venv/bin/activate
+
+# Pull latest changes
+git pull
+
+# Update dependencies
+pip install -r requirements.prod.txt
+
+# Apply any new migrations
+python manage.py migrate
+
+# Update static files
+python manage.py collectstatic --noinput
+
+# Restart services
+systemctl restart membership
+```
+
+Common maintenance commands:
+```bash
+# View application logs
+journalctl -u membership
+
+# View Nginx logs
+tail -f /var/log/nginx/access.log
+tail -f /var/log/nginx/error.log
+
+# Check service status
+systemctl status membership
+systemctl status nginx
+```
+
+10. BEFORE DEPLOYMENT
+--------------------
+1. Ensure your repository is public on GitHub
+2. Push your code to GitHub (if not already done):
+```bash
+# From your local development machine
+git init
+git add .
+git commit -m "Initial commit"
+git branch -M main
+git remote add origin https://github.com/molesza/membership_comparison.git
+git push -u origin main
+```
+
+3. Update requirements.prod.txt with production dependencies
+4. Create a .env file for sensitive data
+5. Update .gitignore to exclude sensitive files
+
+Note: Since this is a public repository, no authentication is needed for cloning. However, you'll need authentication for pushing updates to the repository.

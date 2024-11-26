@@ -99,3 +99,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Sample data directory
 SAMPLE_DATA_DIR = os.path.join(BASE_DIR, 'sample import data')
+
+# Login settings
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'upload'
+LOGOUT_REDIRECT_URL = 'login'
