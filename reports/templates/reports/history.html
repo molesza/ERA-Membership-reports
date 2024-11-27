@@ -1,111 +1,7 @@
+{% extends "reports/base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Membership Comparison History</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .header img {
-            max-width: 200px;
-            margin-bottom: 20px;
-        }
-        h1 {
-            color: #333;
-            margin-bottom: 30px;
-        }
-        .reports-list {
-            display: grid;
-            gap: 20px;
-        }
-        .report-card {
-            background-color: #f5f5f5;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .report-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        .report-title {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #333;
-        }
-        .report-date {
-            color: #666;
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-        .stat-box {
-            background-color: white;
-            padding: 15px;
-            border-radius: 4px;
-            text-align: center;
-        }
-        .stat-number {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #4CAF50;
-            margin-bottom: 5px;
-        }
-        .stat-label {
-            color: #666;
-            font-size: 0.9em;
-        }
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-        }
-        .action-button {
-            display: inline-block;
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 4px;
-            transition: background-color 0.3s;
-        }
-        .action-button:hover {
-            background-color: #45a049;
-        }
-        .back-button {
-            display: inline-block;
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-        .back-button:hover {
-            background-color: #45a049;
-        }
-    </style>
-</head>
-<body>
-    <a href="{% url 'upload' %}" class="back-button">← Back to Upload</a>
 
-    <div class="header">
-        <img src="{% static 'images/ERA Logo.png' %}" alt="ERA Logo">
-        <h1>Membership Comparison History</h1>
-    </div>
-
+{% block content %}
     <div class="reports-list">
         {% for report in reports %}
         <div class="report-card">
@@ -117,6 +13,11 @@
                 <div class="report-date">
                     Generated: {{ report.generated_date|date:"F j, Y H:i" }}
                 </div>
+            </div>
+            
+            <div class="action-buttons">
+                <a href="{% url 'report_detail' report.pk %}" class="btn btn-success">View Full Report</a>
+                <a href="{% url 'report_pdf' report.pk %}" class="btn btn-success">Download PDF</a>
             </div>
             
             <div class="stats-grid">
@@ -145,15 +46,64 @@
                     <div class="stat-label">Status Changes</div>
                 </div>
             </div>
-            
-            <div class="action-buttons">
-                <a href="{% url 'report_detail' report.pk %}" class="action-button">View Full Report</a>
-                <a href="{% url 'report_pdf' report.pk %}" class="action-button">Download PDF</a>
-            </div>
         </div>
         {% empty %}
         <p>No comparison reports available yet. Upload some files to generate reports.</p>
         {% endfor %}
     </div>
-</body>
-</html>
+
+    <style>
+        .reports-list {
+            display: grid;
+            gap: 20px;
+        }
+        .report-card {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .report-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+        .report-date {
+            color: #666;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .stat-box {
+            background-color: white;
+            padding: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #4CAF50;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+    </style>
+{% endblock %}

@@ -12,9 +12,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-your-secret-key-here')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.0.36']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.0.36', 'era.macaulay.xyz']
+
+# CSRF Trusted Origins
+CSRF_TRUSTED_ORIGINS = ['https://era.macaulay.xyz']
 
 # Application definition
 INSTALLED_APPS = [
@@ -62,10 +65,14 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'membership_db',
-        'USER': 'membership_user',
-        'PASSWORD': 'your-secure-password',
+        'USER': 'era',
+        'PASSWORD': 'Era.151081',
         'HOST': 'localhost',
         'PORT': '5432',
+        'OPTIONS': {
+            'client_encoding': 'UTF8',
+            'sslmode': 'disable',
+        },
     }
 }
 
@@ -106,5 +113,11 @@ SAMPLE_DATA_DIR = os.path.join(BASE_DIR, 'sample import data')
 
 # Login settings
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'upload'
+LOGIN_REDIRECT_URL = 'current_members'  # Changed from 'upload' to 'current_members'
 LOGOUT_REDIRECT_URL = 'login'
+
+# Security settings for HTTPS
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# Removed SECURE_SSL_REDIRECT as Cloudflare handles SSL
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True

@@ -7,15 +7,39 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import TemplateView, ListView, DetailView
 from django.contrib import messages
 from django.conf import settings
-from django.http import HttpResponse
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponse, HttpResponseForbidden
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+from PIL import Image as PILImage
 from .models import MembershipUpload, ComparisonReport, Member
+
+def format_date(date_str):
+    """Format date string to show only the date part"""
+    try:
+        if pd.isna(date_str) or date_str == '0000-00-00 00:00:00':
+            return ''
+        if isinstance(date_str, str) and not is_valid_date(date_str):
+            return date_str  # Return as is if it's a status like 'FREE', 'LINKED', etc.
+        date = pd.to_datetime(date_str)
+        return date.strftime('%Y-%m-%d')
+    except:
+        return str(date_str)
+
+def can_upload(user):
+    """Check if user has upload permissions"""
+    return user.is_superuser or user.groups.filter(name='upload_access').exists()
+
+class UploadPermissionMixin(UserPassesTestMixin):
+    def test_func(self):
+        return can_upload(self.request.user)
+    
+    def handle_no_permission(self):
+        return redirect('current_members')
 
 def format_phone_number(number):
     """Format phone number to ensure it starts with +"""
@@ -78,7 +102,17 @@ def download_contact(request, cell):
     
     # Create the response
     response = HttpResponse(content_type='text/vcard')
-    response['Content-Disposition'] = f'attachment; filename="{member["name"]}_{member["surname"]}.vcf"'
+    
+    # Check if request is from a mobile device
+    user_agent = request.META.get('HTTP_USER_AGENT', '').lower()
+    is_mobile = any(device in user_agent for device in ['mobile', 'android', 'iphone', 'ipad', 'webos'])
+    
+    # Set Content-Disposition based on device type
+    if is_mobile:
+        response['Content-Disposition'] = f'inline; filename="{member["name"]}_{member["surname"]}.vcf"'
+    else:
+        response['Content-Disposition'] = f'attachment; filename="{member["name"]}_{member["surname"]}.vcf"'
+    
     response.write('\n'.join(vcard))
     return response
 
@@ -121,9 +155,11 @@ def clean_for_json(value):
 def process_csv_file(file_obj, month, year):
     """Process uploaded CSV file and return DataFrame"""
     try:
-        # If file_obj is bytes, convert to StringIO
-        if isinstance(file_obj, bytes):
-            file_obj = io.StringIO(file_obj.decode('utf-8'))
+        # Handle different input types
+        if isinstance(file_obj, (bytes, memoryview)):
+            # Convert bytes or memoryview to string
+            file_content = file_obj.tobytes() if isinstance(file_obj, memoryview) else file_obj
+            file_obj = io.StringIO(file_content.decode('utf-8'))
             
         df = pd.read_csv(file_obj)
         print(f"Successfully read CSV file. Columns found: {df.columns.tolist()}")
@@ -184,7 +220,10 @@ def compare_memberships(current_df, previous_df):
                 record = {}
                 for column in ['name', 'surname', 'cell', 'email', 'mandate_signed', 'status']:
                     if column in row:
-                        record[column] = clean_for_json(row[column])
+                        value = row[column]
+                        if column == 'mandate_signed':
+                            value = format_date(value)
+                        record[column] = clean_for_json(value)
                 records.append(record)
             return records
         
@@ -257,10 +296,13 @@ def compare_memberships(current_df, previous_df):
         print(f"Error in compare_memberships: {str(e)}")
         raise
 
-class UploadView(LoginRequiredMixin, TemplateView):
+class UploadView(LoginRequiredMixin, UploadPermissionMixin, TemplateView):
     template_name = 'reports/upload.html'
     
     def post(self, request, *args, **kwargs):
+        if not can_upload(request.user):
+            return redirect('current_members')
+            
         if 'file' not in request.FILES:
             messages.error(request, 'Please select a file to upload')
             return redirect('upload')
@@ -383,7 +425,7 @@ class CurrentMembersView(LoginRequiredMixin, TemplateView):
                         'surname': clean_for_json(row['surname']),
                         'cell': clean_for_json(row['cell']),
                         'email': clean_for_json(row['email']),
-                        'mandate_signed': clean_for_json(row['mandate_signed']),
+                        'mandate_signed': format_date(row['mandate_signed']),
                         'complex_building': clean_for_json(row.get('Complex/Building', '')),
                         'street_number': clean_for_json(row.get('Street Number', '')),
                         'street': clean_for_json(row.get('Street', '')),
@@ -453,11 +495,19 @@ def export_report_pdf(request, pk):
         alignment=1  # Center alignment
     )
     
-    # Add ERA Logo
+    # Add ERA Logo with proper aspect ratio
     logo_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'ERA Logo.png')
     if os.path.exists(logo_path):
-        img = Image(logo_path, width=1.2*inch, preserveAspectRatio=True)
-        img.hAlign = 'CENTER'  # Center the image
+        # Open image and get original dimensions
+        with PILImage.open(logo_path) as img:
+            width, height = img.size
+            aspect = height / float(width)
+        
+        # Set width to 1.2 inches and calculate height to maintain aspect ratio
+        img = Image(logo_path)
+        img.drawWidth = 1.2 * inch
+        img.drawHeight = 1.2 * inch * aspect
+        img.hAlign = 'CENTER'
         elements.append(img)
     
     elements.append(Spacer(1, 12))
@@ -469,7 +519,7 @@ def export_report_pdf(request, pk):
         normal_style
     ))
     elements.append(Paragraph(
-        f"Generated on: {datetime.now().strftime('%B %d, %Y %H:%M')}",
+        f"Generated on: {datetime.now().strftime('%Y-%m-%d')}",
         normal_style
     ))
     elements.append(Spacer(1, 20))
@@ -482,7 +532,13 @@ def export_report_pdf(request, pk):
             # Prepare table data
             table_data = [columns]  # Header row
             for member in members:
-                row = [member.get(col.lower().replace(' ', '_'), '') for col in columns]
+                row = []
+                for col in columns:
+                    col_key = col.lower().replace(' ', '_')
+                    value = member.get(col_key, '')
+                    if col == 'Join Date' and 'mandate_signed' in member:
+                        value = format_date(member['mandate_signed'])
+                    row.append(value)
                 table_data.append(row)
             
             # Create table with specified column widths

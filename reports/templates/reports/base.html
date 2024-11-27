@@ -16,41 +16,137 @@
         .navbar-brand img {
             max-height: 40px;
         }
-        .navbar-light .navbar-nav .nav-link {
-            color: white;
+        .nav-link {
+            color: white !important;
+            padding: 8px 16px !important;
+            margin: 0 5px;
         }
-        .navbar-light .navbar-nav .nav-link:hover {
-            color: rgba(255,255,255,0.8);
+        .nav-link:hover {
+            color: rgba(255,255,255,0.8) !important;
+        }
+        .btn-logout {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            margin-left: 15px;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .btn-logout:hover {
+            background-color: #bd2130;
+            color: white;
+            cursor: pointer;
+        }
+        .navbar-toggler {
+            border: none;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            position: relative;
+            color: white !important;
+        }
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+        }
+        @media (max-width: 768px) {
+            .navbar-collapse {
+                position: fixed;
+                top: 0;
+                right: -100%;
+                width: 80%;
+                max-width: 300px;
+                height: 100vh;
+                background-color: #28a745;
+                transition: right 0.3s ease;
+                padding: 1rem;
+                z-index: 1050;
+            }
+            .navbar-collapse.show {
+                right: 0;
+            }
+            .navbar-nav {
+                height: 100%;
+                flex-direction: column;
+            }
+            .navbar-nav .nav-link {
+                padding: 1rem !important;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+            }
+            .btn-logout {
+                margin: 1rem 0;
+                width: 100%;
+                text-align: center;
+            }
+            .navbar-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0,0,0,0.5);
+                z-index: 1040;
+            }
+            .navbar-overlay.show {
+                display: block;
+            }
+            .close-menu {
+                position: absolute;
+                top: 1rem;
+                right: 1rem;
+                color: white;
+                background: none;
+                border: none;
+                font-size: 1.5rem;
+                cursor: pointer;
+            }
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light mb-4">
+    <nav class="navbar navbar-expand-md navbar-light mb-4">
         <div class="container">
-            <a class="navbar-brand" href="{% url 'upload' %}">
+            <a class="navbar-brand" href="{% url 'current_members' %}">
                 <img src="/static/images/ERA Logo.png" alt="ERA Logo">
             </a>
-            {% if user.is_authenticated %}
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
+                <button type="button" class="close-menu d-md-none" data-bs-toggle="collapse" data-bs-target="#navbarNav">×</button>
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'upload' %}">Upload</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'history' %}">History</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'current_members' %}">Current Members</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'logout' %}">Logout</a>
-                    </li>
+                    {% if user.is_authenticated %}
+                        {% if user.is_superuser or 'upload_access' in user.groups.all|stringformat:'s' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'upload' %}">Upload</a>
+                            </li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'current_members' %}">Current Members</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'history' %}">History</a>
+                        </li>
+                        {% if user.is_superuser %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="/admin/">Admin</a>
+                            </li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <form method="post" action="{% url 'logout' %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-logout">Logout</button>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">Login</a>
+                        </li>
+                    {% endif %}
                 </ul>
             </div>
-            {% endif %}
+            <div class="navbar-overlay" data-bs-toggle="collapse" data-bs-target="#navbarNav"></div>
         </div>
     </nav>
 
@@ -61,5 +157,27 @@
 
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Add overlay when menu is opened
+        document.addEventListener('DOMContentLoaded', function() {
+            const navbarCollapse = document.querySelector('.navbar-collapse');
+            const overlay = document.querySelector('.navbar-overlay');
+            
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.target.classList.contains('show')) {
+                        overlay.classList.add('show');
+                    } else {
+                        overlay.classList.remove('show');
+                    }
+                });
+            });
+            
+            observer.observe(navbarCollapse, {
+                attributes: true,
+                attributeFilter: ['class']
+            });
+        });
+    </script>
 </body>
 </html>

@@ -1,71 +1,335 @@
+{% extends "reports/base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Membership Comparison Results</title>
+
+{% block content %}
+    <div class="comparison-header">
+        <h1>Membership Comparison Results</h1>
+        <p>Comparing {{ current_month }} {{ current_year }} with {{ previous_month }} {{ previous_year }}</p>
+        <div class="action-buttons">
+            <a href="{% url 'history' %}" class="btn btn-success">View History</a>
+            <a href="{% url 'report_pdf' report.pk %}" class="btn btn-success">Download PDF</a>
+        </div>
+    </div>
+
+    <!-- Desktop View -->
+    <div class="desktop-view">
+        <div class="section">
+            <h2>New Active Members <span class="count-badge">{{ changes.new_active|length }}</span></h2>
+            {% if not changes.new_active %}
+                <p>No new active members found.</p>
+            {% else %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Surname</th>
+                            <th>Cell</th>
+                            <th>Email</th>
+                            <th>Join Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for member in changes.new_active %}
+                        <tr>
+                            <td>{{ member.name }}</td>
+                            <td>{{ member.surname }}</td>
+                            <td>{{ member.cell }}</td>
+                            <td>{{ member.email }}</td>
+                            <td class="status-active">{{ member.mandate_signed }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        </div>
+
+        <div class="section">
+            <h2>New Free Members <span class="count-badge">{{ changes.new_free|length }}</span></h2>
+            {% if not changes.new_free %}
+                <p>No new free members found.</p>
+            {% else %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Surname</th>
+                            <th>Cell</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for member in changes.new_free %}
+                        <tr>
+                            <td>{{ member.name }}</td>
+                            <td>{{ member.surname }}</td>
+                            <td>{{ member.cell }}</td>
+                            <td>{{ member.email }}</td>
+                            <td class="status-free">FREE</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        </div>
+
+        <div class="section">
+            <h2>New Linked Members <span class="count-badge">{{ changes.new_linked|length }}</span></h2>
+            {% if not changes.new_linked %}
+                <p>No new linked members found.</p>
+            {% else %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Surname</th>
+                            <th>Cell</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for member in changes.new_linked %}
+                        <tr>
+                            <td>{{ member.name }}</td>
+                            <td>{{ member.surname }}</td>
+                            <td>{{ member.cell }}</td>
+                            <td>{{ member.email }}</td>
+                            <td class="status-linked">LINKED</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        </div>
+
+        <div class="section">
+            <h2>New Leads <span class="count-badge">{{ changes.new_leads|length }}</span></h2>
+            {% if not changes.new_leads %}
+                <p>No new leads found.</p>
+            {% else %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Surname</th>
+                            <th>Cell</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for member in changes.new_leads %}
+                        <tr>
+                            <td>{{ member.name }}</td>
+                            <td>{{ member.surname }}</td>
+                            <td>{{ member.cell }}</td>
+                            <td>{{ member.email }}</td>
+                            <td class="status-lead">LEAD</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        </div>
+
+        <div class="section">
+            <h2>Cancelled Members <span class="count-badge">{{ changes.cancelled_members|length }}</span></h2>
+            {% if not changes.cancelled_members %}
+                <p>No cancelled members found.</p>
+            {% else %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Surname</th>
+                            <th>Cell</th>
+                            <th>Previous Status</th>
+                            <th>New Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for member in changes.cancelled_members %}
+                        <tr>
+                            <td>{{ member.name }}</td>
+                            <td>{{ member.surname }}</td>
+                            <td>{{ member.cell }}</td>
+                            <td>{{ member.old_status }}</td>
+                            <td class="status-cancelled">CANCELLED</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        </div>
+
+        <div class="section">
+            <h2>Other Status Changes <span class="count-badge">{{ changes.status_changes|length }}</span></h2>
+            {% if not changes.status_changes %}
+                <p>No other status changes found.</p>
+            {% else %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Surname</th>
+                            <th>Cell</th>
+                            <th>Previous Status</th>
+                            <th>New Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for change in changes.status_changes %}
+                        <tr>
+                            <td>{{ change.name }}</td>
+                            <td>{{ change.surname }}</td>
+                            <td>{{ change.cell }}</td>
+                            <td>{{ change.old_status }}</td>
+                            <td>{{ change.new_status }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Mobile View -->
+    <div class="mobile-view">
+        <div class="section">
+            <h2>New Active Members <span class="count-badge">{{ changes.new_active|length }}</span></h2>
+            {% if not changes.new_active %}
+                <p>No new active members found.</p>
+            {% else %}
+                <div class="member-list">
+                    {% for member in changes.new_active %}
+                    <div class="member-card" onclick="showMemberDetails(this)" data-member='{"name": "{{ member.name }}", "surname": "{{ member.surname }}", "cell": "{{ member.cell }}", "email": "{{ member.email }}", "status": "Active", "join_date": "{{ member.mandate_signed }}"}'>
+                        <div class="member-name">{{ member.surname }}, {{ member.name }}</div>
+                        <div class="member-cell">{{ member.cell }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="section">
+            <h2>New Free Members <span class="count-badge">{{ changes.new_free|length }}</span></h2>
+            {% if not changes.new_free %}
+                <p>No new free members found.</p>
+            {% else %}
+                <div class="member-list">
+                    {% for member in changes.new_free %}
+                    <div class="member-card" onclick="showMemberDetails(this)" data-member='{"name": "{{ member.name }}", "surname": "{{ member.surname }}", "cell": "{{ member.cell }}", "email": "{{ member.email }}", "status": "Free"}'>
+                        <div class="member-name">{{ member.surname }}, {{ member.name }}</div>
+                        <div class="member-cell">{{ member.cell }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="section">
+            <h2>New Linked Members <span class="count-badge">{{ changes.new_linked|length }}</span></h2>
+            {% if not changes.new_linked %}
+                <p>No new linked members found.</p>
+            {% else %}
+                <div class="member-list">
+                    {% for member in changes.new_linked %}
+                    <div class="member-card" onclick="showMemberDetails(this)" data-member='{"name": "{{ member.name }}", "surname": "{{ member.surname }}", "cell": "{{ member.cell }}", "email": "{{ member.email }}", "status": "Linked"}'>
+                        <div class="member-name">{{ member.surname }}, {{ member.name }}</div>
+                        <div class="member-cell">{{ member.cell }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="section">
+            <h2>New Leads <span class="count-badge">{{ changes.new_leads|length }}</span></h2>
+            {% if not changes.new_leads %}
+                <p>No new leads found.</p>
+            {% else %}
+                <div class="member-list">
+                    {% for member in changes.new_leads %}
+                    <div class="member-card" onclick="showMemberDetails(this)" data-member='{"name": "{{ member.name }}", "surname": "{{ member.surname }}", "cell": "{{ member.cell }}", "email": "{{ member.email }}", "status": "Lead"}'>
+                        <div class="member-name">{{ member.surname }}, {{ member.name }}</div>
+                        <div class="member-cell">{{ member.cell }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="section">
+            <h2>Cancelled Members <span class="count-badge">{{ changes.cancelled_members|length }}</span></h2>
+            {% if not changes.cancelled_members %}
+                <p>No cancelled members found.</p>
+            {% else %}
+                <div class="member-list">
+                    {% for member in changes.cancelled_members %}
+                    <div class="member-card" onclick="showMemberDetails(this)" data-member='{"name": "{{ member.name }}", "surname": "{{ member.surname }}", "cell": "{{ member.cell }}", "old_status": "{{ member.old_status }}", "status": "Cancelled"}'>
+                        <div class="member-name">{{ member.surname }}, {{ member.name }}</div>
+                        <div class="member-cell">{{ member.cell }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="section">
+            <h2>Other Status Changes <span class="count-badge">{{ changes.status_changes|length }}</span></h2>
+            {% if not changes.status_changes %}
+                <p>No other status changes found.</p>
+            {% else %}
+                <div class="member-list">
+                    {% for change in changes.status_changes %}
+                    <div class="member-card" onclick="showMemberDetails(this)" data-member='{"name": "{{ change.name }}", "surname": "{{ change.surname }}", "cell": "{{ change.cell }}", "old_status": "{{ change.old_status }}", "status": "{{ change.new_status }}"}'>
+                        <div class="member-name">{{ change.surname }}, {{ change.name }}</div>
+                        <div class="member-cell">{{ change.cell }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Member Details Modal -->
+    <div class="modal fade" id="memberModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Member Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="member-details">
+                        <p><strong>Name:</strong> <span id="modalName"></span></p>
+                        <p><strong>Cell:</strong> <span id="modalCell"></span></p>
+                        <p><strong>Email:</strong> <span id="modalEmail"></span></p>
+                        <p><strong>Status:</strong> <span id="modalStatus"></span></p>
+                        <p id="modalOldStatus" style="display: none"><strong>Previous Status:</strong> <span></span></p>
+                        <p id="modalJoinDate" style="display: none"><strong>Join Date:</strong> <span></span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
+        /* Desktop styles */
+        .desktop-view {
+            display: block;
         }
+        .mobile-view {
+            display: none;
+        }
+        
+        /* Common styles */
         .section {
             margin-bottom: 30px;
             padding: 20px;
             border-radius: 4px;
             background-color: #f5f5f5;
-        }
-        h1 {
-            color: #333;
-            margin-bottom: 20px;
-        }
-        h2 {
-            color: #666;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .count-badge {
-            background-color: #4CAF50;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.8em;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-            background-color: white;
-        }
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        th {
-            background-color: #4CAF50;
-            color: white;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        tr:hover {
-            background-color: #f5f5f5;
-        }
-        .back-button {
-            display: inline-block;
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-        .back-button:hover {
-            background-color: #45a049;
         }
         .comparison-header {
             margin-bottom: 20px;
@@ -74,240 +338,95 @@
             border-radius: 4px;
             text-align: center;
         }
-        .comparison-header img {
-            max-width: 200px;
-            margin-bottom: 20px;
-        }
-        .status-active {
-            color: #2e7d32;
-            font-weight: bold;
-        }
-        .status-free {
-            color: #1565c0;
-            font-weight: bold;
-        }
-        .status-linked {
-            color: #6a1b9a;
-            font-weight: bold;
-        }
-        .status-lead {
-            color: #ff6f00;
-            font-weight: bold;
-        }
-        .status-cancelled {
-            color: #c62828;
-            font-weight: bold;
-        }
-        .action-buttons {
-            margin: 20px 0;
-            display: flex;
-            gap: 10px;
-        }
-        .action-button {
-            display: inline-block;
+        .count-badge {
             background-color: #4CAF50;
             color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 4px;
-            transition: background-color 0.3s;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
         }
-        .action-button:hover {
-            background-color: #45a049;
+        .status-active { color: #2e7d32; font-weight: bold; }
+        .status-free { color: #1565c0; font-weight: bold; }
+        .status-linked { color: #6a1b9a; font-weight: bold; }
+        .status-lead { color: #ff6f00; font-weight: bold; }
+        .status-cancelled { color: #c62828; font-weight: bold; }
+        .action-buttons {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .table thead th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        /* Mobile styles */
+        @media (max-width: 768px) {
+            .desktop-view {
+                display: none;
+            }
+            .mobile-view {
+                display: block;
+            }
+            .member-list {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+            .member-card {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 15px;
+                background-color: white;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                cursor: pointer;
+            }
+            .member-name {
+                font-weight: 500;
+            }
+            .member-cell {
+                color: #666;
+            }
+            .member-card:active {
+                background-color: #f8f9fa;
+            }
         }
     </style>
-</head>
-<body>
-    <div class="action-buttons">
-        <a href="{% url 'upload' %}" class="action-button">← Back to Upload</a>
-        <a href="{% url 'history' %}" class="action-button">View History</a>
-        <a href="{% url 'report_pdf' report.pk %}" class="action-button">Download PDF</a>
-    </div>
 
-    <div class="comparison-header">
-        <img src="{% static 'images/ERA Logo.png' %}" alt="ERA Logo">
-        <h1>Membership Comparison Results</h1>
-        <p>Comparing {{ current_month }} {{ current_year }} with {{ previous_month }} {{ previous_year }}</p>
-    </div>
-
-    <div class="section">
-        <h2>New Active Members <span class="count-badge">{{ changes.new_active|length }}</span></h2>
-        {% if not changes.new_active %}
-            <p>No new active members found.</p>
-        {% else %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Surname</th>
-                        <th>Cell</th>
-                        <th>Email</th>
-                        <th>Join Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for member in changes.new_active %}
-                    <tr>
-                        <td>{{ member.name }}</td>
-                        <td>{{ member.surname }}</td>
-                        <td>{{ member.cell }}</td>
-                        <td>{{ member.email }}</td>
-                        <td class="status-active">{{ member.mandate_signed }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% endif %}
-    </div>
-
-    <div class="section">
-        <h2>New Free Members <span class="count-badge">{{ changes.new_free|length }}</span></h2>
-        {% if not changes.new_free %}
-            <p>No new free members found.</p>
-        {% else %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Surname</th>
-                        <th>Cell</th>
-                        <th>Email</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for member in changes.new_free %}
-                    <tr>
-                        <td>{{ member.name }}</td>
-                        <td>{{ member.surname }}</td>
-                        <td>{{ member.cell }}</td>
-                        <td>{{ member.email }}</td>
-                        <td class="status-free">FREE</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% endif %}
-    </div>
-
-    <div class="section">
-        <h2>New Linked Members <span class="count-badge">{{ changes.new_linked|length }}</span></h2>
-        {% if not changes.new_linked %}
-            <p>No new linked members found.</p>
-        {% else %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Surname</th>
-                        <th>Cell</th>
-                        <th>Email</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for member in changes.new_linked %}
-                    <tr>
-                        <td>{{ member.name }}</td>
-                        <td>{{ member.surname }}</td>
-                        <td>{{ member.cell }}</td>
-                        <td>{{ member.email }}</td>
-                        <td class="status-linked">LINKED</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% endif %}
-    </div>
-
-    <div class="section">
-        <h2>New Leads <span class="count-badge">{{ changes.new_leads|length }}</span></h2>
-        {% if not changes.new_leads %}
-            <p>No new leads found.</p>
-        {% else %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Surname</th>
-                        <th>Cell</th>
-                        <th>Email</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for member in changes.new_leads %}
-                    <tr>
-                        <td>{{ member.name }}</td>
-                        <td>{{ member.surname }}</td>
-                        <td>{{ member.cell }}</td>
-                        <td>{{ member.email }}</td>
-                        <td class="status-lead">LEAD</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% endif %}
-    </div>
-
-    <div class="section">
-        <h2>Cancelled Members <span class="count-badge">{{ changes.cancelled_members|length }}</span></h2>
-        {% if not changes.cancelled_members %}
-            <p>No cancelled members found.</p>
-        {% else %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Surname</th>
-                        <th>Cell</th>
-                        <th>Previous Status</th>
-                        <th>New Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for member in changes.cancelled_members %}
-                    <tr>
-                        <td>{{ member.name }}</td>
-                        <td>{{ member.surname }}</td>
-                        <td>{{ member.cell }}</td>
-                        <td>{{ member.old_status }}</td>
-                        <td class="status-cancelled">CANCELLED</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% endif %}
-    </div>
-
-    <div class="section">
-        <h2>Other Status Changes <span class="count-badge">{{ changes.status_changes|length }}</span></h2>
-        {% if not changes.status_changes %}
-            <p>No other status changes found.</p>
-        {% else %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Surname</th>
-                        <th>Cell</th>
-                        <th>Previous Status</th>
-                        <th>New Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for change in changes.status_changes %}
-                    <tr>
-                        <td>{{ change.name }}</td>
-                        <td>{{ change.surname }}</td>
-                        <td>{{ change.cell }}</td>
-                        <td>{{ change.old_status }}</td>
-                        <td>{{ change.new_status }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% endif %}
-    </div>
-</body>
-</html>
+    <script>
+        function showMemberDetails(element) {
+            const memberData = JSON.parse(element.getAttribute('data-member'));
+            
+            // Update modal content
+            document.getElementById('modalName').textContent = memberData.surname + ', ' + memberData.name;
+            document.getElementById('modalCell').textContent = memberData.cell;
+            document.getElementById('modalEmail').textContent = memberData.email || 'Not provided';
+            document.getElementById('modalStatus').textContent = memberData.status;
+            
+            // Show/hide old status for status changes
+            const oldStatusElement = document.getElementById('modalOldStatus');
+            if (memberData.old_status) {
+                oldStatusElement.style.display = 'block';
+                oldStatusElement.querySelector('span').textContent = memberData.old_status;
+            } else {
+                oldStatusElement.style.display = 'none';
+            }
+            
+            // Show/hide join date for active members
+            const joinDateElement = document.getElementById('modalJoinDate');
+            if (memberData.join_date) {
+                joinDateElement.style.display = 'block';
+                joinDateElement.querySelector('span').textContent = memberData.join_date;
+            } else {
+                joinDateElement.style.display = 'none';
+            }
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('memberModal'));
+            modal.show();
+        }
+    </script>
+{% endblock %}

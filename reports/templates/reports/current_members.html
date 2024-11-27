@@ -1,28 +1,209 @@
+{% extends "reports/base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Current Members List</title>
+
+{% block content %}
+    <!-- Desktop View -->
+    <div class="desktop-view">
+        <div class="category-section">
+            <h2>Active Members <span class="count-badge">{{ active_members|length }}</span></h2>
+            {% if active_members %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Surname</th>
+                        <th>Cell</th>
+                        <th>Address</th>
+                        <th>Join Date</th>
+                        <th>Contact Card</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in active_members %}
+                    <tr>
+                        <td>{{ member.name }}</td>
+                        <td>{{ member.surname }}</td>
+                        <td>{{ member.cell }}</td>
+                        <td>
+                            {% if member.complex_building %}{{ member.complex_building }}, {% endif %}
+                            {% if member.street_number %}{{ member.street_number }} {% endif %}
+                            {% if member.street %}{{ member.street }}, {% endif %}
+                            {% if member.suburb %}{{ member.suburb }}{% endif %}
+                        </td>
+                        <td>{{ member.mandate_signed }}</td>
+                        <td>
+                            <a href="{% url 'download_contact' cell=member.cell %}" class="btn btn-sm btn-success">Download</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No active members found.</p>
+            {% endif %}
+        </div>
+
+        <div class="category-section">
+            <h2>Linked Members <span class="count-badge">{{ linked_members|length }}</span></h2>
+            {% if linked_members %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Surname</th>
+                        <th>Cell</th>
+                        <th>Address</th>
+                        <th>Status</th>
+                        <th>Contact Card</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in linked_members %}
+                    <tr>
+                        <td>{{ member.name }}</td>
+                        <td>{{ member.surname }}</td>
+                        <td>{{ member.cell }}</td>
+                        <td>
+                            {% if member.complex_building %}{{ member.complex_building }}, {% endif %}
+                            {% if member.street_number %}{{ member.street_number }} {% endif %}
+                            {% if member.street %}{{ member.street }}, {% endif %}
+                            {% if member.suburb %}{{ member.suburb }}{% endif %}
+                        </td>
+                        <td>LINKED</td>
+                        <td>
+                            <a href="{% url 'download_contact' cell=member.cell %}" class="btn btn-sm btn-success">Download</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No linked members found.</p>
+            {% endif %}
+        </div>
+
+        <div class="category-section">
+            <h2>Free Members <span class="count-badge">{{ free_members|length }}</span></h2>
+            {% if free_members %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Surname</th>
+                        <th>Cell</th>
+                        <th>Address</th>
+                        <th>Status</th>
+                        <th>Contact Card</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in free_members %}
+                    <tr>
+                        <td>{{ member.name }}</td>
+                        <td>{{ member.surname }}</td>
+                        <td>{{ member.cell }}</td>
+                        <td>
+                            {% if member.complex_building %}{{ member.complex_building }}, {% endif %}
+                            {% if member.street_number %}{{ member.street_number }} {% endif %}
+                            {% if member.street %}{{ member.street }}, {% endif %}
+                            {% if member.suburb %}{{ member.suburb }}{% endif %}
+                        </td>
+                        <td>FREE</td>
+                        <td>
+                            <a href="{% url 'download_contact' cell=member.cell %}" class="btn btn-sm btn-success">Download</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No free members found.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Mobile View -->
+    <div class="mobile-view">
+        <div class="category-section">
+            <h2>Active Members <span class="count-badge">{{ active_members|length }}</span></h2>
+            {% if active_members %}
+            <div class="member-list">
+                {% for member in active_members %}
+                <div class="member-card" onclick="showMemberDetails(this)" data-member='{"name": "{{ member.name }}", "surname": "{{ member.surname }}", "cell": "{{ member.cell }}", "address": "{% if member.complex_building %}{{ member.complex_building }}, {% endif %}{% if member.street_number %}{{ member.street_number }} {% endif %}{% if member.street %}{{ member.street }}, {% endif %}{% if member.suburb %}{{ member.suburb }}{% endif %}", "status": "Active", "join_date": "{{ member.mandate_signed }}"}'>
+                    <div class="member-name">{{ member.surname }}, {{ member.name }}</div>
+                    <a href="{% url 'download_contact' cell=member.cell %}" class="btn btn-sm btn-success" onclick="event.stopPropagation()">Download</a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p>No active members found.</p>
+            {% endif %}
+        </div>
+
+        <div class="category-section">
+            <h2>Linked Members <span class="count-badge">{{ linked_members|length }}</span></h2>
+            {% if linked_members %}
+            <div class="member-list">
+                {% for member in linked_members %}
+                <div class="member-card" onclick="showMemberDetails(this)" data-member='{"name": "{{ member.name }}", "surname": "{{ member.surname }}", "cell": "{{ member.cell }}", "address": "{% if member.complex_building %}{{ member.complex_building }}, {% endif %}{% if member.street_number %}{{ member.street_number }} {% endif %}{% if member.street %}{{ member.street }}, {% endif %}{% if member.suburb %}{{ member.suburb }}{% endif %}", "status": "Linked"}'>
+                    <div class="member-name">{{ member.surname }}, {{ member.name }}</div>
+                    <a href="{% url 'download_contact' cell=member.cell %}" class="btn btn-sm btn-success" onclick="event.stopPropagation()">Download</a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p>No linked members found.</p>
+            {% endif %}
+        </div>
+
+        <div class="category-section">
+            <h2>Free Members <span class="count-badge">{{ free_members|length }}</span></h2>
+            {% if free_members %}
+            <div class="member-list">
+                {% for member in free_members %}
+                <div class="member-card" onclick="showMemberDetails(this)" data-member='{"name": "{{ member.name }}", "surname": "{{ member.surname }}", "cell": "{{ member.cell }}", "address": "{% if member.complex_building %}{{ member.complex_building }}, {% endif %}{% if member.street_number %}{{ member.street_number }} {% endif %}{% if member.street %}{{ member.street }}, {% endif %}{% if member.suburb %}{{ member.suburb }}{% endif %}", "status": "Free"}'>
+                    <div class="member-name">{{ member.surname }}, {{ member.name }}</div>
+                    <a href="{% url 'download_contact' cell=member.cell %}" class="btn btn-sm btn-success" onclick="event.stopPropagation()">Download</a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p>No free members found.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Member Details Modal -->
+    <div class="modal fade" id="memberModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Member Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="member-details">
+                        <p><strong>Name:</strong> <span id="modalName"></span></p>
+                        <p><strong>Cell:</strong> <span id="modalCell"></span></p>
+                        <p><strong>Address:</strong> <span id="modalAddress"></span></p>
+                        <p><strong>Status:</strong> <span id="modalStatus"></span></p>
+                        <p id="modalJoinDate" style="display: none"><strong>Join Date:</strong> <span></span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
+        /* Desktop styles */
+        .desktop-view {
+            display: block;
         }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
+        .mobile-view {
+            display: none;
         }
-        .header img {
-            max-width: 200px;
-            margin-bottom: 20px;
-        }
-        h1 {
-            color: #333;
-            margin-bottom: 30px;
-            text-align: center;
-        }
+        
+        /* Common styles */
         .category-section {
             margin-bottom: 40px;
         }
@@ -42,194 +223,65 @@
             border-radius: 12px;
             font-size: 0.8em;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-            background-color: white;
-        }
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        th {
+        .table thead th {
             background-color: #4CAF50;
             color: white;
         }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        tr:hover {
-            background-color: #f5f5f5;
-        }
-        .nav-links {
-            margin-bottom: 30px;
-            display: flex;
-            gap: 10px;
-        }
-        .nav-link {
-            display: inline-block;
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 4px;
-            transition: background-color 0.3s;
-        }
-        .nav-link:hover {
-            background-color: #45a049;
-        }
-        .meta-info {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-        }
-        .download-btn {
-            display: inline-block;
-            background-color: #2196F3;
-            color: white;
-            padding: 6px 12px;
-            text-decoration: none;
-            border-radius: 4px;
-            font-size: 0.9em;
-            transition: background-color 0.3s;
-        }
-        .download-btn:hover {
-            background-color: #1976D2;
+
+        /* Mobile styles */
+        @media (max-width: 768px) {
+            .desktop-view {
+                display: none;
+            }
+            .mobile-view {
+                display: block;
+            }
+            .member-list {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+            .member-card {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 15px;
+                background-color: white;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                cursor: pointer;
+            }
+            .member-name {
+                font-weight: 500;
+            }
+            .member-card:active {
+                background-color: #f8f9fa;
+            }
         }
     </style>
-</head>
-<body>
-    <div class="nav-links">
-        <a href="{% url 'upload' %}" class="nav-link">← Back to Upload</a>
-        <a href="{% url 'history' %}" class="nav-link">View History</a>
-    </div>
 
-    <div class="header">
-        <img src="{% static 'images/ERA Logo.png' %}" alt="ERA Logo">
-        <h1>Current Members List</h1>
-    </div>
-
-    <div class="meta-info">
-        Based on latest upload: {{ upload_month }} {{ upload_year }}
-    </div>
-
-    <div class="category-section">
-        <h2>Active Members <span class="count-badge">{{ active_members|length }}</span></h2>
-        {% if active_members %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Surname</th>
-                    <th>Cell</th>
-                    <th>Address</th>
-                    <th>Join Date</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for member in active_members %}
-                <tr>
-                    <td>{{ member.name }}</td>
-                    <td>{{ member.surname }}</td>
-                    <td>{{ member.cell }}</td>
-                    <td>
-                        {% if member.complex_building %}{{ member.complex_building }}, {% endif %}
-                        {% if member.street_number %}{{ member.street_number }} {% endif %}
-                        {% if member.street %}{{ member.street }}, {% endif %}
-                        {% if member.suburb %}{{ member.suburb }}{% endif %}
-                    </td>
-                    <td>{{ member.mandate_signed }}</td>
-                    <td>
-                        <a href="{% url 'download_contact' cell=member.cell %}" class="download-btn">📞 Contact</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <p>No active members found.</p>
-        {% endif %}
-    </div>
-
-    <div class="category-section">
-        <h2>Linked Members <span class="count-badge">{{ linked_members|length }}</span></h2>
-        {% if linked_members %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Surname</th>
-                    <th>Cell</th>
-                    <th>Address</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for member in linked_members %}
-                <tr>
-                    <td>{{ member.name }}</td>
-                    <td>{{ member.surname }}</td>
-                    <td>{{ member.cell }}</td>
-                    <td>
-                        {% if member.complex_building %}{{ member.complex_building }}, {% endif %}
-                        {% if member.street_number %}{{ member.street_number }} {% endif %}
-                        {% if member.street %}{{ member.street }}, {% endif %}
-                        {% if member.suburb %}{{ member.suburb }}{% endif %}
-                    </td>
-                    <td>LINKED</td>
-                    <td>
-                        <a href="{% url 'download_contact' cell=member.cell %}" class="download-btn">📞 Contact</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <p>No linked members found.</p>
-        {% endif %}
-    </div>
-
-    <div class="category-section">
-        <h2>Free Members <span class="count-badge">{{ free_members|length }}</span></h2>
-        {% if free_members %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Surname</th>
-                    <th>Cell</th>
-                    <th>Address</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for member in free_members %}
-                <tr>
-                    <td>{{ member.name }}</td>
-                    <td>{{ member.surname }}</td>
-                    <td>{{ member.cell }}</td>
-                    <td>
-                        {% if member.complex_building %}{{ member.complex_building }}, {% endif %}
-                        {% if member.street_number %}{{ member.street_number }} {% endif %}
-                        {% if member.street %}{{ member.street }}, {% endif %}
-                        {% if member.suburb %}{{ member.suburb }}{% endif %}
-                    </td>
-                    <td>FREE</td>
-                    <td>
-                        <a href="{% url 'download_contact' cell=member.cell %}" class="download-btn">📞 Contact</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <p>No free members found.</p>
-        {% endif %}
-    </div>
-</body>
-</html>
+    <script>
+        function showMemberDetails(element) {
+            const memberData = JSON.parse(element.getAttribute('data-member'));
+            
+            // Update modal content
+            document.getElementById('modalName').textContent = memberData.surname + ', ' + memberData.name;
+            document.getElementById('modalCell').textContent = memberData.cell;
+            document.getElementById('modalAddress').textContent = memberData.address || 'Not provided';
+            document.getElementById('modalStatus').textContent = memberData.status;
+            
+            // Show/hide join date for active members
+            const joinDateElement = document.getElementById('modalJoinDate');
+            if (memberData.join_date) {
+                joinDateElement.style.display = 'block';
+                joinDateElement.querySelector('span').textContent = memberData.join_date;
+            } else {
+                joinDateElement.style.display = 'none';
+            }
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('memberModal'));
+            modal.show();
+        }
+    </script>
+{% endblock %}
