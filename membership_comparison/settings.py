@@ -61,19 +61,14 @@ TEMPLATES = [
 WSGI_APPLICATION = 'membership_comparison.wsgi.application'
 
 # Database
+import dj_database_url
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('POSTGRES_DB', 'membership_db'),
-        'USER': os.environ.get('POSTGRES_USER', 'era'),
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'Era.151081'),
-        'HOST': os.environ.get('POSTGRES_HOST', 'fgkck480gogo88o40ko8cs0s'),
-        'PORT': os.environ.get('POSTGRES_PORT', '5432'),
-        'OPTIONS': {
-            'client_encoding': 'UTF8',
-            'sslmode': 'disable',
-        },
-    }
+    'default': dj_database_url.config(
+        default='postgres://era:Era.151081@fgkck480gogo88o40ko8cs0s:5432/membership_db',
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
 
 # Password validation
