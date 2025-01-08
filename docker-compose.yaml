@@ -4,7 +4,7 @@ services:
     build: .
     image: ${COOLIFY_IMAGE_NAME}
     ports:
-      - "${PORT}:8000"
+      - "8001:8000"
     environment:
       DJANGO_SETTINGS_MODULE: membership_comparison.settings
       SECRET_KEY: ${SECRET_KEY}
