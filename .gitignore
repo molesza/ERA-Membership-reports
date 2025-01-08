@@ -1,9 +1,9 @@
 # Python
-*.py[cod]
 __pycache__/
+*.py[cod]
+*$py.class
 *.so
 .Python
-env/
 build/
 develop-eggs/
 dist/
@@ -15,22 +15,25 @@ lib64/
 parts/
 sdist/
 var/
+wheels/
 *.egg-info/
 .installed.cfg
 *.egg
 
 # Django
 *.log
-*.pot
-*.pyc
+local_settings.py
 db.sqlite3
-media/
+db.sqlite3-journal
+media
 staticfiles/
 
-# Virtual Environment
+# Environment
+.env
+.venv
+env/
 venv/
 ENV/
-.env
 
 # IDE
 .idea/
@@ -41,7 +44,3 @@ ENV/
 # OS
 .DS_Store
 Thumbs.db
-
-# Project specific
-sample import data/
-*.csv

@@ -64,11 +64,11 @@ WSGI_APPLICATION = 'membership_comparison.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'membership_db',
-        'USER': 'era',
-        'PASSWORD': 'Era.151081',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': os.environ.get('POSTGRES_DB', 'membership_db'),
+        'USER': os.environ.get('POSTGRES_USER', 'era'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'Era.151081'),
+        'HOST': os.environ.get('POSTGRES_HOST', 'fgkck480gogo88o40ko8cs0s'),
+        'PORT': os.environ.get('POSTGRES_PORT', '5432'),
         'OPTIONS': {
             'client_encoding': 'UTF8',
             'sslmode': 'disable',

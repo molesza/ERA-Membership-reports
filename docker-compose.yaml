@@ -1,0 +1,29 @@
+version: '3'
+services:
+  web:
+    build: .
+    image: ${COOLIFY_IMAGE_NAME}
+    ports:
+      - "${PORT}:8000"
+    environment:
+      DJANGO_SETTINGS_MODULE: membership_comparison.settings
+      SECRET_KEY: ${SECRET_KEY}
+      DEBUG: 0
+      ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
+      POSTGRES_DB: membership_db
+      POSTGRES_USER: era
+      POSTGRES_PASSWORD: Era.151081
+      POSTGRES_HOST: fgkck480gogo88o40ko8cs0s
+      POSTGRES_PORT: 5432
+    networks:
+      - coolify
+    volumes:
+      - staticfiles:/app/staticfiles
+
+networks:
+  coolify:
+    external: true
+    name: coolify
+
+volumes:
+  staticfiles:
