@@ -300,34 +300,59 @@ class UploadView(LoginRequiredMixin, UploadPermissionMixin, TemplateView):
     template_name = 'reports/upload.html'
     
     def post(self, request, *args, **kwargs):
+        print("\n=== Upload View Called ===")
+        print(f"Method: {request.method}")
+        
         if not can_upload(request.user):
             return redirect('current_members')
             
-        if 'file' not in request.FILES:
-            messages.error(request, 'Please select a file to upload')
-            return redirect('upload')
-            
-        file_obj = request.FILES['file']
+        print("\nPOST Data:")
+        for key, value in request.POST.items():
+            print(f"{key}: {value}")
+        print("\nFiles:")
+        for key, value in request.FILES.items():
+            print(f"{key}: {value}")
+        
+        file = request.FILES.get('file')
+        date = request.POST.get('date')
         month = request.POST.get('month')
         year = request.POST.get('year')
         
-        if not all([month, year]):
-            messages.error(request, 'Please provide both month and year')
-            return redirect('upload')
+        print(f"\nExtracted Data:")
+        print(f"File: {file.name if file else None}")
+        print(f"Date: {date}")
+        print(f"Month: {month}")
+        print(f"Year: {year}")
+        
+        if not file:
+            messages.error(request, 'Please select a file to upload')
+            return self.render_to_response(self.get_context_data())
             
         try:
-            print(f"\nProcessing upload for {month} {year}")
-            print(f"File name: {file_obj.name}")
+            # If we have a date but no month/year, try to parse them from the date
+            if date and not (month and year):
+                try:
+                    date_obj = datetime.strptime(date, '%Y-%m')
+                    month = date_obj.strftime('%B')  # Full month name
+                    year = date_obj.year
+                    print(f"Parsed from date - Month: {month}, Year: {year}")
+                except ValueError as e:
+                    print(f"Error parsing date: {e}")
+                    messages.error(request, 'Invalid date format')
+                    return self.render_to_response(self.get_context_data())
             
-            # Read the file content
-            file_content = file_obj.read()
+            if not all([month, year]):
+                print("Missing month or year after parsing")
+                messages.error(request, 'Please provide both month and year')
+                return self.render_to_response(self.get_context_data())
             
             # Process current upload
+            file_content = file.read()
             current_df = process_csv_file(io.StringIO(file_content.decode('utf-8')), month, year)
             
             # Save upload record with file content
             upload = MembershipUpload.objects.create(
-                file_name=file_obj.name,
+                file_name=file.name,
                 month=month,
                 year=year,
                 file_content=file_content
@@ -366,9 +391,9 @@ class UploadView(LoginRequiredMixin, UploadPermissionMixin, TemplateView):
                 return redirect('upload')
                 
         except Exception as e:
-            print(f"Error in upload view: {str(e)}")
-            messages.error(request, f'Error processing file: {str(e)}')
-            return redirect('upload')
+            print(f"Error processing upload: {str(e)}")
+            messages.error(request, f'Error processing upload: {str(e)}')
+            return self.render_to_response(self.get_context_data())
 
 class ReportHistoryView(LoginRequiredMixin, ListView):
     model = ComparisonReport
@@ -646,8 +671,11 @@ def upload_view(request):
     
     if request.method == 'POST':
         print("\nPOST Data:")
-        print(f"FILES: {request.FILES}")
-        print(f"POST: {request.POST}")
+        for key, value in request.POST.items():
+            print(f"{key}: {value}")
+        print("\nFiles:")
+        for key, value in request.FILES.items():
+            print(f"{key}: {value}")
         
         file = request.FILES.get('file')
         date = request.POST.get('date')
@@ -661,20 +689,30 @@ def upload_view(request):
         print(f"Year: {year}")
         
         if not file:
-            print("Error: No file provided")
             messages.error(request, 'Please select a file to upload')
             return render(request, 'reports/upload.html')
-            
-        if not all([month, year]):
-            print(f"Error: Missing month or year")
-            print(f"Month present: {bool(month)}")
-            print(f"Year present: {bool(year)}")
-            messages.error(request, 'Please provide both month and year')
-            return render(request, 'reports/upload.html')
-            
+        
         try:
-            # Your existing processing logic...
-            pass
+            # If we have a date but no month/year, try to parse them from the date
+            if date and not (month and year):
+                try:
+                    date_obj = datetime.strptime(date, '%Y-%m')
+                    month = date_obj.strftime('%B')  # Full month name
+                    year = date_obj.year
+                    print(f"Parsed from date - Month: {month}, Year: {year}")
+                except ValueError as e:
+                    print(f"Error parsing date: {e}")
+                    messages.error(request, 'Invalid date format')
+                    return render(request, 'reports/upload.html')
+            
+            if not all([month, year]):
+                print("Missing month or year after parsing")
+                messages.error(request, 'Please provide both month and year')
+                return render(request, 'reports/upload.html')
+            
+            # Process the upload...
+            # Your existing processing logic here
+            
         except Exception as e:
             print(f"Error processing upload: {str(e)}")
             messages.error(request, f'Error processing upload: {str(e)}')

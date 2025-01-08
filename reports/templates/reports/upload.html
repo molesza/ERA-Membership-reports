@@ -14,7 +14,7 @@
 
     <div class="upload-container">
         <h1>Upload Membership CSV</h1>
-        <form method="post" enctype="multipart/form-data">
+        <form method="post" enctype="multipart/form-data" id="uploadForm">
             {% csrf_token %}
             <div class="form-group">
                 <label for="file">Select CSV File:</label>
@@ -104,61 +104,44 @@
     </style>
 
     <script>
-        // Set default date to current month
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Initializing form...');
-            
-            // Set default date
+            const form = document.getElementById('uploadForm');
             const dateInput = document.getElementById('date');
-            if (dateInput) {
-                dateInput.valueAsDate = new Date();
-                console.log('Default date set:', dateInput.value);
-            } else {
-                console.error('Date input not found');
-            }
 
-            // Add event listener to form submission
-            const form = document.querySelector('form');
-            if (form) {
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    console.log('Form submission started');
-                    
-                    // Get the month input value
-                    const dateInput = document.getElementById('date');
-                    if (!dateInput || !dateInput.value) {
-                        console.error('Date input is missing or empty');
-                        return;
-                    }
-                    
-                    const date = new Date(dateInput.value);
-                    console.log('Parsed date:', date);
-                    
-                    // Create hidden inputs for month and year
-                    const monthInput = document.createElement('input');
-                    monthInput.type = 'hidden';
-                    monthInput.name = 'month';
-                    monthInput.value = date.toLocaleString('default', { month: 'long' });
-                    
-                    const yearInput = document.createElement('input');
-                    yearInput.type = 'hidden';
-                    yearInput.name = 'year';
-                    yearInput.value = date.getFullYear();
-                    
-                    console.log('Adding month:', monthInput.value);
-                    console.log('Adding year:', yearInput.value);
-                    
-                    // Add hidden inputs to form
-                    this.appendChild(monthInput);
-                    this.appendChild(yearInput);
-                    
-                    // Submit the form
-                    console.log('Submitting form...');
-                    this.submit();
-                });
-            } else {
-                console.error('Form not found');
-            }
+            // Set default date to current month
+            const now = new Date();
+            const month = now.getMonth() + 1;
+            const year = now.getFullYear();
+            dateInput.value = `${year}-${month.toString().padStart(2, '0')}`;
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                console.log('Form submitted');
+
+                const date = new Date(dateInput.value + '-01'); // Add day for proper parsing
+                
+                // Add month and year as hidden fields
+                const monthInput = document.createElement('input');
+                monthInput.type = 'hidden';
+                monthInput.name = 'month';
+                monthInput.value = date.toLocaleString('default', { month: 'long' });
+                form.appendChild(monthInput);
+
+                const yearInput = document.createElement('input');
+                yearInput.type = 'hidden';
+                yearInput.name = 'year';
+                yearInput.value = date.getFullYear();
+                form.appendChild(yearInput);
+
+                // Log the form data before submission
+                const formData = new FormData(form);
+                for (let pair of formData.entries()) {
+                    console.log(pair[0] + ': ' + pair[1]);
+                }
+
+                // Submit the form
+                form.submit();
+            });
         });
     </script>
 {% endblock %}
