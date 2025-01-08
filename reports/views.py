@@ -639,34 +639,45 @@ def export_report_pdf(request, pk):
     doc.build(elements)
     return response
 
+@login_required
 def upload_view(request):
+    print("\n=== Upload View Called ===")
+    print(f"Method: {request.method}")
+    
     if request.method == 'POST':
-        # Get the uploaded file
+        print("\nPOST Data:")
+        print(f"FILES: {request.FILES}")
+        print(f"POST: {request.POST}")
+        
         file = request.FILES.get('file')
-        # Get the date from the month input
-        date = request.POST.get('date')  # This should contain both month and year
+        date = request.POST.get('date')
+        month = request.POST.get('month')
+        year = request.POST.get('year')
+        
+        print(f"\nExtracted Data:")
+        print(f"File: {file.name if file else None}")
+        print(f"Date: {date}")
+        print(f"Month: {month}")
+        print(f"Year: {year}")
         
         if not file:
+            print("Error: No file provided")
             messages.error(request, 'Please select a file to upload')
             return render(request, 'reports/upload.html')
             
-        if not date:
-            messages.error(request, 'Please select a month and year')
+        if not all([month, year]):
+            print(f"Error: Missing month or year")
+            print(f"Month present: {bool(month)}")
+            print(f"Year present: {bool(year)}")
+            messages.error(request, 'Please provide both month and year')
             return render(request, 'reports/upload.html')
             
-        # Parse the date string to get month and year
         try:
-            date_obj = datetime.strptime(date, '%Y-%m')
-            month = date_obj.strftime('%B')  # Full month name
-            year = date_obj.year
-            
-            # Process the file and continue with your existing logic
-            # ...
-            
-        except ValueError:
-            messages.error(request, 'Invalid date format')
+            # Your existing processing logic...
+            pass
+        except Exception as e:
+            print(f"Error processing upload: {str(e)}")
+            messages.error(request, f'Error processing upload: {str(e)}')
             return render(request, 'reports/upload.html')
-            
-        # Continue with your existing processing logic...
-        
+    
     return render(request, 'reports/upload.html')

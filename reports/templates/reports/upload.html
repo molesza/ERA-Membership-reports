@@ -105,33 +105,60 @@
 
     <script>
         // Set default date to current month
-        document.getElementById('date').valueAsDate = new Date();
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Initializing form...');
+            
+            // Set default date
+            const dateInput = document.getElementById('date');
+            if (dateInput) {
+                dateInput.valueAsDate = new Date();
+                console.log('Default date set:', dateInput.value);
+            } else {
+                console.error('Date input not found');
+            }
 
-        // Add event listener to form submission
-        document.querySelector('form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Get the month input value
-            const dateInput = document.getElementById('date').value;
-            const date = new Date(dateInput);
-            
-            // Create hidden inputs for month and year
-            const monthInput = document.createElement('input');
-            monthInput.type = 'hidden';
-            monthInput.name = 'month';
-            monthInput.value = date.toLocaleString('default', { month: 'long' });
-            
-            const yearInput = document.createElement('input');
-            yearInput.type = 'hidden';
-            yearInput.name = 'year';
-            yearInput.value = date.getFullYear();
-            
-            // Add hidden inputs to form
-            this.appendChild(monthInput);
-            this.appendChild(yearInput);
-            
-            // Submit the form
-            this.submit();
+            // Add event listener to form submission
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    console.log('Form submission started');
+                    
+                    // Get the month input value
+                    const dateInput = document.getElementById('date');
+                    if (!dateInput || !dateInput.value) {
+                        console.error('Date input is missing or empty');
+                        return;
+                    }
+                    
+                    const date = new Date(dateInput.value);
+                    console.log('Parsed date:', date);
+                    
+                    // Create hidden inputs for month and year
+                    const monthInput = document.createElement('input');
+                    monthInput.type = 'hidden';
+                    monthInput.name = 'month';
+                    monthInput.value = date.toLocaleString('default', { month: 'long' });
+                    
+                    const yearInput = document.createElement('input');
+                    yearInput.type = 'hidden';
+                    yearInput.name = 'year';
+                    yearInput.value = date.getFullYear();
+                    
+                    console.log('Adding month:', monthInput.value);
+                    console.log('Adding year:', yearInput.value);
+                    
+                    // Add hidden inputs to form
+                    this.appendChild(monthInput);
+                    this.appendChild(yearInput);
+                    
+                    // Submit the form
+                    console.log('Submitting form...');
+                    this.submit();
+                });
+            } else {
+                console.error('Form not found');
+            }
         });
     </script>
 {% endblock %}
