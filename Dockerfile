@@ -34,5 +34,7 @@ COPY . .
 # Collect static files
 RUN python manage.py collectstatic --noinput
 
-# Run gunicorn
+# Create superuser and run gunicorn
+RUN echo "from django.contrib.auth.models import User; User.objects.create_superuser('molesza', 'treasurer@eshowera.co.za', 'amandhla151081') if not User.objects.filter(username='molesza').exists() else None" | python manage.py shell
+
 CMD gunicorn membership_comparison.wsgi:application --bind 0.0.0.0:8000
