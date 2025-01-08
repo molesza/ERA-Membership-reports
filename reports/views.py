@@ -638,3 +638,35 @@ def export_report_pdf(request, pk):
     # Build PDF
     doc.build(elements)
     return response
+
+def upload_view(request):
+    if request.method == 'POST':
+        # Get the uploaded file
+        file = request.FILES.get('file')
+        # Get the date from the month input
+        date = request.POST.get('date')  # This should contain both month and year
+        
+        if not file:
+            messages.error(request, 'Please select a file to upload')
+            return render(request, 'reports/upload.html')
+            
+        if not date:
+            messages.error(request, 'Please select a month and year')
+            return render(request, 'reports/upload.html')
+            
+        # Parse the date string to get month and year
+        try:
+            date_obj = datetime.strptime(date, '%Y-%m')
+            month = date_obj.strftime('%B')  # Full month name
+            year = date_obj.year
+            
+            # Process the file and continue with your existing logic
+            # ...
+            
+        except ValueError:
+            messages.error(request, 'Invalid date format')
+            return render(request, 'reports/upload.html')
+            
+        # Continue with your existing processing logic...
+        
+    return render(request, 'reports/upload.html')
